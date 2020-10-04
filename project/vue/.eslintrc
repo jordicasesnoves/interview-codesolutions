@@ -1,0 +1,10 @@
+{
+  "extends": "standard",
+  "rules": {
+    "no-new": 0
+  },
+  "env": {
+    "browser": 1
+  },
+  "plugins": ["html", "json"]
+}
