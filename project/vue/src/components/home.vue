@@ -2,16 +2,16 @@
     <main role="main">
         <div class="album py-5 bg-light">
             <div class="container">
-                <div v-if="productsPaginated.length">
+                <div v-if="totalProducts">
                   <b-pagination
                     v-model="currentPage"
-                    :total-rows="rows"
+                    :total-rows="totalProducts"
                     :per-page="perPage"
                     aria-controls="my-table"
                   ></b-pagination>
               <p class="mt-3">Current Page: {{ currentPage }}</p>
                   <div class="row">
-                    <div v-for="product in productsPaginated" :key="product.id" class="col-md-4">
+                    <div v-for="product in products" :key="product.id" class="col-md-4">
                         <div class="card mb-4 shadow-sm">
                             <img v-lazy="product.image" class="lazyload card-img-top" :alt="product.name">
                             <div class="card-body">
@@ -53,16 +53,48 @@
         perPage: 3
       }
     },
-    mounted () {
-      let payload = {}
+    // Cuando cambia la pagina, buscamos los productos de esa pagina en la BBDD
+    watch: {
+      currentPage: function (value) {
+        let payload = {
+          l: this.perPage,
+          p: this.currentPage
+        }
+
+        let self = this
+        return productsService.search(payload)
+          .then(res => {
+            self.$store.commit('setProducts', res.products)
+          })
+          .catch(err => {
+            console.error(err)
+          })
+      }
+    },
+    // Cuando se monta el componente Home,
+    // guardamos tanto los productos de la pagina inicial, como el total de productos
+    async mounted () {
+      let payload = {
+        l: this.perPage,
+        p: this.currentPage
+      }
+
       let self = this
-      return productsService.search(payload)
+      let p1 = await productsService.search(payload)
         .then(res => {
           self.$store.commit('setProducts', res.products)
         })
         .catch(err => {
           console.error(err)
         })
+      let p2 = await productsService.getTotalProducts()
+        .then(res => {
+          self.$store.commit('setTotalProducts', res.products)
+        })
+        .catch(err => {
+          console.error(err)
+        })
+      return Promise.all([p1, p2])
     },
     filters: {
       // Tarea 4: Crear un filtro para limitar a 90 caracteres
@@ -77,19 +109,12 @@
       }
     },
     computed: {
-      // Calcular el numero total de productos
-      rows () {
-        return this.$store.getters.products.length
-      },
       products () {
         return this.$store.getters.products
       },
-      // Lista de productos paginados
-      productsPaginated () {
-        return this.$store.getters.products.slice(
-          (this.currentPage - 1) * this.perPage,
-          this.currentPage * this.perPage
-        )
+      // Calcular el numero total de productos
+      totalProducts () {
+        return this.$store.getters.totalProducts
       }
     }
   }

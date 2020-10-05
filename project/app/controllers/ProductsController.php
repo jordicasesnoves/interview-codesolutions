@@ -1,10 +1,23 @@
 <?php
 
+use Phalcon\Http\Request;
+
 class ProductsController extends ControllerBase
 {
     public function indexAction()
     {
-        $this->view->products = Products::find();
+        $params = $this->request->getQuery();
+
+        $limit = $params['limit'];
+        $page = $params['page'] - 1;
+
+        $this->view->products = Products::find(
+            [
+                'skip' => $limit * $page,
+                'limit' => $limit
+            ]
+        );
+
     }
 
     public function searchAction($name = '')
@@ -18,6 +31,7 @@ class ProductsController extends ControllerBase
             ]
         ]);
     }
+
 
     public function viewAction($url = '')
     {

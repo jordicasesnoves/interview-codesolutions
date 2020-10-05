@@ -13,7 +13,7 @@ const baseService = '/products'
 
 productsSetService.search = function (payload) {
   let params = {
-    search: payload.q,
+    search: payload.q || '',
     limit: payload.l || 20,
     page: payload.p || 1
   }
@@ -24,6 +24,13 @@ productsSetService.search = function (payload) {
       return qs.stringify(params, {encode: false})
     }
   })
+    .then(res => {
+      return res.data
+    })
+}
+
+productsSetService.getTotalProducts = function () {
+  return http.get('/count')
     .then(res => res.data)
 }
 
